@@ -3,7 +3,7 @@
   "id": 1,
   "name": "Istanbul Biennial",
   "category": "art",
-  "tags": ["art", "culture", "exhibition"],
+  "tags": ["art", "culture", "exhibition", "photography"],
   "rating": 4.5,
   "date": "2024-09-15",
   "image_url": "https://via.placeholder.com/400x200?text=Istanbul+Biennial"
@@ -12,7 +12,7 @@
   "id": 2,
   "name": "Bosphorus Cruise",
   "category": "tour",
-  "tags": ["nature", "sightseeing", "relaxation"],
+  "tags": ["nature", "sightseeing", "relaxation", "views"],
   "rating": 4.7,
   "date": "2024-10-01",
   "image_url": "https://via.placeholder.com/400x200?text=Bosphorus+Cruise"
@@ -21,9 +21,45 @@
   "id": 3,
   "name": "Turkish Night Show",
   "category": "entertainment",
-  "tags": ["music", "dance", "culture"],
+  "tags": ["music", "dance", "culture", "food"],
   "rating": 4.6,
   "date": "2024-08-20",
   "image_url": "https://via.placeholder.com/400x200?text=Turkish+Night+Show"
+ },
+ {
+  "id": 4,
+  "name": "Whirling Dervishes Ceremony",
+  "category": "cultural",
+  "tags": ["culture", "spirituality", "music", "dance", "history"],
+  "rating": 4.8,
+  "date": "2024-11-10",
+  "image_url": "https://via.placeholder.com/400x200?text=Whirling+Dervishes"
+ },
+ {
+  "id": 5,
+  "name": "Istanbul Jazz Festival",
+  "category": "music",
+  "tags": ["music", "culture", "entertainment", "nightlife"],
+  "rating": 4.4,
+  "date": "2024-07-15",
+  "image_url": "https://via.placeholder.com/400x200?text=Jazz+Festival"
+ },
+ {
+  "id": 6,
+  "name": "Ramadan Nights",
+  "category": "cultural",
+  "tags": ["culture", "food", "spirituality", "tradition"],
+  "rating": 4.7,
+  "date": "2024-03-15",
+  "image_url": "https://via.placeholder.com/400x200?text=Ramadan+Nights"
+ },
+ {
+  "id": 7,
+  "name": "Belly Dance Workshop",
+  "category": "cultural",
+  "tags": ["dance", "culture", "entertainment", "experience"],
+  "rating": 4.3,
+  "date": "2024-12-05",
+  "image_url": "https://via.placeholder.com/400x200?text=Belly+Dance"
  }
 ]

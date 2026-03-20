@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Istanbul Guide{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h2 class="text-white text-center mb-4">
+            <i class="fas fa-user me-2"></i>Your Profile
+        </h2>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-id-card me-2"></i>Profile Information
+                        </h5>
+                        <div id="profileInfo">
+                            <p>Loading profile...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-star me-2"></i>Update Interests
+                        </h5>
+                        <form id="interestForm">
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">User ID</label>
+                                <input type="text" class="form-control" id="userId" placeholder="Enter your user ID" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="interests" class="form-label">Interests (comma-separated)</label>
+                                <input type="text" class="form-control" id="interests" placeholder="history, culture, food" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Update Interests
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-history me-2"></i>Your Ratings & Activity
+                        </h5>
+                        <div id="activityInfo">
+                            <p>Loading activity...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadProfile() {
+    const userId = localStorage.getItem('userId') || 'guest';
+
+    try {
+        const response = await fetch(`/api/profile/${userId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            const profile = data.profile;
+            document.getElementById('profileInfo').innerHTML = `
+                <p><strong>User ID:</strong> ${profile.user_id}</p>
+                <p><strong>Name:</strong> ${profile.name || 'Not set'}</p>
+                <p><strong>Interests:</strong> ${profile.interests.join(', ') || 'None'}</p>
+                <p><strong>Total Ratings:</strong> ${profile.total_ratings}</p>
+                <p><strong>Average Rating:</strong> ${profile.average_rating_given}/5</p>
+                <p><strong>Places Visited:</strong> ${profile.visited_places}</p>
+            `;
+
+            document.getElementById('activityInfo').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Recent Ratings:</h6>
+                        ${profile.recent_ratings.length > 0 ?
+                            profile.recent_ratings.map(r => `<p>• ${r.place_name}: ${r.rating} ⭐ (${new Date(r.timestamp).toLocaleDateString()})</p>`).join('') :
+                            '<p>No recent ratings</p>'}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recent Visits:</h6>
+                        ${profile.recent_visits.length > 0 ?
+                            profile.recent_visits.map(v => `<p>• ${v.place_name} (${new Date(v.visit_date).toLocaleDateString()})</p>`).join('') :
+                            '<p>No recent visits</p>'}
+                    </div>
+                </div>
+            `;
+
+            // Pre-fill the form
+            document.getElementById('userId').value = profile.user_id;
+            document.getElementById('interests').value = profile.interests.join(', ');
+        } else {
+            document.getElementById('profileInfo').innerHTML = '<p class="text-danger">Profile not found. Please create one first.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        document.getElementById('profileInfo').innerHTML = '<p class="text-danger">Error loading profile.</p>';
+    }
+}
+
+document.getElementById('interestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const userId = document.getElementById('userId').value;
+    const interests = document.getElementById('interests').value.split(',').map(i => i.trim());
+
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId, name: userId, interests: interests })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('userId', userId);
+            alert('Profile updated successfully!');
+            loadProfile();
+        } else {
+            alert('Error updating profile');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating profile');
+    }
+});
+
+// Load profile on page load
+loadProfile();
+</script>
+{% endblock %}

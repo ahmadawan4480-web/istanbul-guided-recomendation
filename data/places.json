@@ -3,7 +3,7 @@
   "id": 1,
   "name": "Hagia Sophia",
   "category": "historical",
-  "tags": ["history","architecture","culture"],
+  "tags": ["history","architecture","culture","spirituality"],
   "rating": 4.8,
   "image_url": "https://via.placeholder.com/400x200?text=Hagia+Sophia"
  },
@@ -11,7 +11,7 @@
   "id": 2,
   "name": "Topkapi Palace",
   "category": "historical",
-  "tags": ["history","museum","culture"],
+  "tags": ["history","museum","culture","royalty"],
   "rating": 4.7,
   "image_url": "https://via.placeholder.com/400x200?text=Topkapi+Palace"
  },
@@ -19,8 +19,64 @@
   "id": 3,
   "name": "Grand Bazaar",
   "category": "shopping",
-  "tags": ["shopping","market","culture"],
+  "tags": ["shopping","market","culture","adventure"],
   "rating": 4.6,
   "image_url": "https://via.placeholder.com/400x200?text=Grand+Bazaar"
+ },
+ {
+  "id": 4,
+  "name": "Blue Mosque",
+  "category": "religious",
+  "tags": ["history","architecture","culture","spirituality","photography"],
+  "rating": 4.9,
+  "image_url": "https://via.placeholder.com/400x200?text=Blue+Mosque"
+ },
+ {
+  "id": 5,
+  "name": "Spice Bazaar",
+  "category": "shopping",
+  "tags": ["shopping","food","culture","spices","adventure"],
+  "rating": 4.5,
+  "image_url": "https://via.placeholder.com/400x200?text=Spice+Bazaar"
+ },
+ {
+  "id": 6,
+  "name": "Bosphorus Cruise",
+  "category": "tour",
+  "tags": ["nature","sightseeing","relaxation","views","photography"],
+  "rating": 4.7,
+  "image_url": "https://via.placeholder.com/400x200?text=Bosphorus+Cruise"
+ },
+ {
+  "id": 7,
+  "name": "Chora Church",
+  "category": "historical",
+  "tags": ["history","architecture","culture","art","spirituality"],
+  "rating": 4.6,
+  "image_url": "https://via.placeholder.com/400x200?text=Chora+Church"
+ },
+ {
+  "id": 8,
+  "name": "Istanbul Modern",
+  "category": "art",
+  "tags": ["art","culture","museum","photography","exhibition"],
+  "rating": 4.4,
+  "image_url": "https://via.placeholder.com/400x200?text=Istanbul+Modern"
+ },
+ {
+  "id": 9,
+  "name": "Galata Tower",
+  "category": "historical",
+  "tags": ["history","architecture","views","photography","culture"],
+  "rating": 4.3,
+  "image_url": "https://via.placeholder.com/400x200?text=Galata+Tower"
+ },
+ {
+  "id": 10,
+  "name": "Taksim Square",
+  "category": "urban",
+  "tags": ["shopping","food","culture","nightlife","people"],
+  "rating": 4.2,
+  "image_url": "https://via.placeholder.com/400x200?text=Taksim+Square"
  }
 ]
