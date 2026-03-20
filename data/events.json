@@ -1,0 +1,29 @@
+[
+ {
+  "id": 1,
+  "name": "Istanbul Biennial",
+  "category": "art",
+  "tags": ["art", "culture", "exhibition"],
+  "rating": 4.5,
+  "date": "2024-09-15",
+  "image_url": "https://via.placeholder.com/400x200?text=Istanbul+Biennial"
+ },
+ {
+  "id": 2,
+  "name": "Bosphorus Cruise",
+  "category": "tour",
+  "tags": ["nature", "sightseeing", "relaxation"],
+  "rating": 4.7,
+  "date": "2024-10-01",
+  "image_url": "https://via.placeholder.com/400x200?text=Bosphorus+Cruise"
+ },
+ {
+  "id": 3,
+  "name": "Turkish Night Show",
+  "category": "entertainment",
+  "tags": ["music", "dance", "culture"],
+  "rating": 4.6,
+  "date": "2024-08-20",
+  "image_url": "https://via.placeholder.com/400x200?text=Turkish+Night+Show"
+ }
+]

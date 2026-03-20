@@ -1,0 +1,26 @@
+[
+ {
+  "id": 1,
+  "name": "Hagia Sophia",
+  "category": "historical",
+  "tags": ["history","architecture","culture"],
+  "rating": 4.8,
+  "image_url": "https://via.placeholder.com/400x200?text=Hagia+Sophia"
+ },
+ {
+  "id": 2,
+  "name": "Topkapi Palace",
+  "category": "historical",
+  "tags": ["history","museum","culture"],
+  "rating": 4.7,
+  "image_url": "https://via.placeholder.com/400x200?text=Topkapi+Palace"
+ },
+ {
+  "id": 3,
+  "name": "Grand Bazaar",
+  "category": "shopping",
+  "tags": ["shopping","market","culture"],
+  "rating": 4.6,
+  "image_url": "https://via.placeholder.com/400x200?text=Grand+Bazaar"
+ }
+]
