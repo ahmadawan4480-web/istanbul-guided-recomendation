@@ -8,23 +8,12 @@ def print_header():
     print("=" * 50)
 
 def get_user_profile():
-    """Get or create user profile"""
-    user_id = input("Enter your user ID: ").strip()
-    if not user_id:
-        user_id = "guest"
-
-    # Try to load existing profile
-    profile = UserProfile(user_id)
-
-    if not profile.name:
-        name = input("Enter your name: ").strip()
-        interests_input = input("Enter your interests (comma-separated, e.g., history, culture): ").strip()
-        interests = [i.strip() for i in interests_input.split(',') if i.strip()]
-        profile = UserProfile(user_id, name, interests)
-        print(f"✅ Profile created for {name}!")
-    else:
-        print(f"👋 Welcome back, {profile.name}!")
-
+    """Get or create global user profile"""
+    name = input("Enter your name (optional): ").strip() or "Guest"
+    interests_input = input("Enter your interests (comma-separated, e.g., history, culture): ").strip()
+    interests = [i.strip() for i in interests_input.split(',') if i.strip()]
+    profile = UserProfile(name, interests)
+    print(f"✅ Profile created for {name}!")
     return profile
 
 def show_menu():
@@ -45,7 +34,7 @@ def handle_recommendations(profile):
         print("❌ No interests found. Please add interests first.")
         return
 
-    recommendations = recommend_items(interests, profile.user_id, limit=5)
+    recommendations = recommend_items(interests, limit=5)
 
     if not recommendations:
         print("❌ No recommendations found. Try different interests.")
@@ -93,7 +82,6 @@ def handle_view_profile(profile):
     print("\n👤 User Profile")
     summary = profile.get_profile_summary()
 
-    print(f"User ID: {summary['user_id']}")
     print(f"Name: {summary['name']}")
     print(f"Interests: {', '.join(summary['interests'])}")
     print(f"Total Ratings Given: {summary['total_ratings']}")

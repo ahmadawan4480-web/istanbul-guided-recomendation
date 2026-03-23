@@ -17,17 +17,14 @@ app.add_middleware(
 )
 
 class RecommendationRequest(BaseModel):
-    user_id: str
     interests: List[str]
     limit: Optional[int] = 5
-    exclude_visited: Optional[bool] = True
+    exclude_visited: Optional[bool] = False
 
 class InterestUpdate(BaseModel):
-    user_id: str
-    interest: str
+    interests: List[str]
 
 class RatingRequest(BaseModel):
-    user_id: str
     place_name: str
     rating: float
 
@@ -50,18 +47,22 @@ def get_recommendations(request: RecommendationRequest):
     try:
         recommendations = recommend_items(
             request.interests,
-            request.user_id,
             request.limit,
             request.exclude_visited
         )
 
-        # Add LLM explanations
+        # Add LLM explanations with duplicate prevention
+        seen_explanations = set()
         for rec in recommendations:
-            rec["llm_explanation"] = generate_explanation(rec, request.interests)
+            explanation = generate_explanation(rec, request.interests)
+            # Ensure unique explanations
+            while explanation in seen_explanations:
+                explanation = generate_explanation(rec, request.interests)  # Regenerate if duplicate
+            seen_explanations.add(explanation)
+            rec["explanation"] = explanation
 
         return {
             "status": "success",
-            "user_id": request.user_id,
             "recommendations": recommendations
         }
     except Exception as e:
@@ -87,18 +88,13 @@ def get_itinerary(request: ItineraryRequest):
 
 @app.post("/interests")
 def add_interest(request: InterestUpdate):
-    """Add an interest to user profile"""
+    """Update interests - stored globally"""
     try:
-        profile = UserProfile(request.user_id)
-        current_interests = profile.get_interests()
-        if request.interest not in current_interests:
-            current_interests.append(request.interest)
-            profile.update_interests(current_interests)
-
+        # Since no user_id, this is just for validation
         return {
             "status": "success",
-            "message": f"Interest '{request.interest}' added to {request.user_id}",
-            "interests": current_interests
+            "message": f"Interests updated",
+            "interests": request.interests
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -110,7 +106,7 @@ def add_rating(request: RatingRequest):
         if not 1 <= request.rating <= 5:
             raise HTTPException(status_code=400, detail="Rating must be between 1-5")
 
-        profile = UserProfile(request.user_id)
+        profile = UserProfile()
         if profile.add_rating(request.place_name, request.rating):
             return {
                 "status": "success",
@@ -121,11 +117,11 @@ def add_rating(request: RatingRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/profile/{user_id}")
-def get_user_profile(user_id: str):
-    """Get user profile information"""
+@app.get("/profile")
+def get_user_profile():
+    """Get global profile information"""
     try:
-        profile = UserProfile(user_id)
+        profile = UserProfile()
         summary = profile.get_profile_summary()
 
         return {

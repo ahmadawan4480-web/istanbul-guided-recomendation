@@ -15,37 +15,23 @@ class DatabaseConnection:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # Users table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                user_id TEXT PRIMARY KEY,
-                name TEXT,
-                interests TEXT,  -- JSON string of interests list
-                created_date TEXT,
-                updated_date TEXT
-            )
-        ''')
-
-        # Ratings table
+        # Users table - removed, no user_id
+        # Ratings table - global ratings
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS ratings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                place_name TEXT,
+                place_name TEXT UNIQUE,
                 rating REAL,
-                timestamp TEXT,
-                FOREIGN KEY (user_id) REFERENCES users (user_id)
+                timestamp TEXT
             )
         ''')
 
-        # Visited places table
+        # Visited places table - global visited
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS visited_places (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                place_name TEXT,
-                visit_date TEXT,
-                FOREIGN KEY (user_id) REFERENCES users (user_id)
+                place_name TEXT UNIQUE,
+                visit_date TEXT
             )
         ''')
 
@@ -63,65 +49,28 @@ class DatabaseConnection:
         conn.commit()
         conn.close()
 
-    def create_user(self, user_id, name, interests=None):
-        """Create a new user profile"""
-        if interests is None:
-            interests = []
-        interests_str = ','.join(interests)
-        now = datetime.now().isoformat()
+    def create_user(self, name, interests=None):
+        """Create a global profile - not used anymore"""
+        pass
 
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT OR REPLACE INTO users (user_id, name, interests, created_date, updated_date)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, name, interests_str, now, now))
-        conn.commit()
-        conn.close()
-
-    def get_user(self, user_id):
-        """Get user profile"""
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
-        user = cursor.fetchone()
-        conn.close()
-
-        if user:
-            user_id, name, interests_str, created, updated = user
-            interests = interests_str.split(',') if interests_str else []
-            return {
-                'user_id': user_id,
-                'name': name,
-                'interests': interests,
-                'created_date': created,
-                'updated_date': updated
-            }
+    def get_user(self, name):
+        """Get global profile - not used"""
         return None
 
-    def update_user_interests(self, user_id, interests):
-        """Update user interests"""
-        interests_str = ','.join(interests)
-        now = datetime.now().isoformat()
+    def update_user_interests(self, interests):
+        """Not used - interests handled in session/memory"""
+        pass
 
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE users SET interests = ?, updated_date = ? WHERE user_id = ?
-        ''', (interests_str, now, user_id))
-        conn.commit()
-        conn.close()
-
-    def add_rating(self, user_id, place_name, rating):
-        """Add or update a rating for a place"""
+    def add_rating(self, place_name, rating):
+        """Add or update a global rating for a place"""
         now = datetime.now().isoformat()
 
         conn = self.get_connection()
         cursor = conn.cursor()
         # Check if rating exists
         cursor.execute('''
-            SELECT id FROM ratings WHERE user_id = ? AND place_name = ?
-        ''', (user_id, place_name))
+            SELECT id FROM ratings WHERE place_name = ?
+        ''', (place_name,))
 
         existing = cursor.fetchone()
         if existing:
@@ -130,17 +79,17 @@ class DatabaseConnection:
             ''', (rating, now, existing[0]))
         else:
             cursor.execute('''
-                INSERT INTO ratings (user_id, place_name, rating, timestamp)
-                VALUES (?, ?, ?, ?)
-            ''', (user_id, place_name, rating, now))
+                INSERT INTO ratings (place_name, rating, timestamp)
+                VALUES (?, ?, ?)
+            ''', (place_name, rating, now))
         conn.commit()
         conn.close()
 
-    def get_user_ratings(self, user_id):
-        """Get all ratings for a user"""
+    def get_all_ratings(self):
+        """Get all global ratings"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT place_name, rating, timestamp FROM ratings WHERE user_id = ?', (user_id,))
+        cursor.execute('SELECT place_name, rating, timestamp FROM ratings')
         ratings = cursor.fetchall()
         conn.close()
 
@@ -155,24 +104,24 @@ class DatabaseConnection:
         conn.close()
         return avg if avg else 0.0
 
-    def add_visited_place(self, user_id, place_name):
-        """Mark a place as visited"""
+    def add_visited_place(self, place_name):
+        """Mark a place as visited globally"""
         now = datetime.now().isoformat()
 
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO visited_places (user_id, place_name, visit_date)
-            VALUES (?, ?, ?)
-        ''', (user_id, place_name, now))
+            INSERT OR IGNORE INTO visited_places (place_name, visit_date)
+            VALUES (?, ?)
+        ''', (place_name, now))
         conn.commit()
         conn.close()
 
-    def get_visited_places(self, user_id):
-        """Get visited places for a user"""
+    def get_visited_places(self):
+        """Get globally visited places"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT place_name, visit_date FROM visited_places WHERE user_id = ?', (user_id,))
+        cursor.execute('SELECT place_name, visit_date FROM visited_places')
         visited = cursor.fetchall()
         conn.close()
 

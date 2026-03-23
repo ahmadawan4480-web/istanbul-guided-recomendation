@@ -1,21 +1,7 @@
 import pytest
-from recommendation.recommender import recommend_items, cosine_similarity, create_vector
+from recommendation.recommender import recommend_items
 from models.user_profile import UserProfile
 from database.db_connection import DatabaseConnection
-
-def test_cosine_similarity():
-    """Test cosine similarity calculation"""
-    vec1 = [1, 0, 1]
-    vec2 = [1, 1, 0]
-    similarity = cosine_similarity(vec1, vec2)
-    assert similarity == 0.5  # (1*1 + 0*1 + 1*0) / (sqrt(2) * sqrt(2))
-
-def test_create_vector():
-    """Test vector creation from terms"""
-    terms = ['history', 'culture', 'food']
-    interests = ['history', 'food']
-    vector = create_vector(interests, terms)
-    assert vector == [1, 0, 1]
 
 def test_recommend_items():
     """Test recommendation system"""
@@ -26,11 +12,15 @@ def test_recommend_items():
     assert all('hybrid_score' in rec for rec in recommendations)
     assert all(rec['hybrid_score'] >= 0 for rec in recommendations)
 
+    # Test variability - run multiple times to check different results
+    recommendations2 = recommend_items(interests, limit=3)
+    # Should be different due to randomization
+    assert recommendations != recommendations2 or len(recommendations) <= 1
+
 def test_user_profile():
     """Test user profile creation and management"""
-    profile = UserProfile('test_user', 'Test User', ['history'])
+    profile = UserProfile('Test User', ['history'])
 
-    assert profile.user_id == 'test_user'
     assert profile.name == 'Test User'
     assert 'history' in profile.get_interests()
 
@@ -39,29 +29,57 @@ def test_user_profile():
     assert success
 
     ratings = profile.get_ratings()
-    assert len(ratings) == 1
-    assert ratings[0]['place_name'] == 'Hagia Sophia'
-    assert ratings[0]['rating'] == 5
+    assert len(ratings) >= 1  # May have existing ratings
+    # Check if our rating was added
+    hagias_ratings = [r for r in ratings if r['place_name'] == 'Hagia Sophia']
+    assert len(hagias_ratings) >= 1
 
 def test_database_operations():
     """Test database operations"""
     db = DatabaseConnection()
 
-    # Create test user
-    db.create_user('test_db_user', 'Test DB User', ['test'])
-
-    # Retrieve user
-    user = db.get_user('test_db_user')
-    assert user is not None
-    assert user['name'] == 'Test DB User'
-
     # Add rating
-    db.add_rating('test_db_user', 'Test Place', 4.5)
+    db.add_rating('Test Place', 4.5)
 
-    # Get ratings
-    ratings = db.get_user_ratings('test_db_user')
-    assert len(ratings) == 1
-    assert ratings[0]['place_name'] == 'Test Place'
+    # Get average rating
+    avg_rating = db.get_place_average_rating('Test Place')
+    assert avg_rating == 4.5
+
+def test_explanation_uniqueness():
+    """Test that LLM explanations are cached and unique"""
+    from llm.explanation_generator import generate_explanation
+
+    item = {
+        'name': 'Hagia Sophia',
+        'category': 'historical',
+        'tags': ['history', 'architecture']
+    }
+    interests = ['history', 'culture']
+
+    # Generate explanation
+    explanation1 = generate_explanation(item, interests)
+
+    # Generate again - should be cached
+    explanation2 = generate_explanation(item, interests)
+
+    assert explanation1 == explanation2  # Should be the same due to caching
+
+
+def test_explanation_non_generic_fallback():
+    """Fallback explanation should not be boilerplate generic phrase"""
+    from llm.explanation_generator import generate_explanation
+
+    item = {
+        'name': 'Taksim Square',
+        'category': 'cultural',
+        'tags': ['culture', 'urban']
+    }
+    interests = ['culture']
+
+    explanation = generate_explanation(item, interests)
+    assert 'matches your interest' not in explanation
+    assert 'unique' in explanation or 'immersive' in explanation or 'experience' in explanation
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

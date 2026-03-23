@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import sys
 import os
 
@@ -10,6 +10,7 @@ from llm.explanation_generator import generate_explanation
 from models.user_profile import UserProfile
 
 app = Flask(__name__)
+app.secret_key = 'istanbul-recommendation-secret-key'  # For session management
 
 @app.route('/')
 def home():
@@ -19,10 +20,6 @@ def home():
 def recommendations():
     return render_template('recommendations.html')
 
-@app.route('/profile')
-def profile():
-    return render_template('profile.html')
-
 @app.route('/itinerary')
 def itinerary():
     return render_template('itinerary.html')
@@ -30,50 +27,32 @@ def itinerary():
 @app.route('/api/recommend', methods=['POST'])
 def api_recommend():
     data = request.json
-    user_id = data.get('user_id', 'guest')
-    interests = data.get('interests', [])
+    interests = data.get('interests', session.get('interests', []))
 
-    recommendations = recommend_items(interests, user_id, limit=5)
+    recommendations = recommend_items(interests, limit=5)
 
-    # Add explanations
+    # Add explanations with duplicate prevention
+    seen_explanations = set()
     for rec in recommendations:
-        rec['explanation'] = generate_explanation(rec, interests)
+        explanation = generate_explanation(rec, interests)
+        # Ensure unique explanations
+        while explanation in seen_explanations:
+            explanation = generate_explanation(rec, interests)  # Regenerate if duplicate
+        seen_explanations.add(explanation)
+        rec['explanation'] = explanation
 
     return jsonify({
         'success': True,
         'recommendations': recommendations
     })
 
-@app.route('/api/profile/<user_id>')
-def api_get_profile(user_id):
-    profile = UserProfile(user_id)
-    summary = profile.get_profile_summary()
-    return jsonify({
-        'success': True,
-        'profile': summary
-    })
-
-@app.route('/api/profile', methods=['POST'])
-def api_update_profile():
-    data = request.json
-    user_id = data.get('user_id')
-    name = data.get('name')
-    interests = data.get('interests', [])
-
-    profile = UserProfile(user_id, name, interests)
-    return jsonify({
-        'success': True,
-        'message': 'Profile updated'
-    })
-
 @app.route('/api/rate', methods=['POST'])
 def api_rate():
     data = request.json
-    user_id = data.get('user_id')
     place_name = data.get('place_name')
     rating = data.get('rating')
 
-    profile = UserProfile(user_id)
+    profile = UserProfile()
     if profile.add_rating(place_name, rating):
         return jsonify({
             'success': True,

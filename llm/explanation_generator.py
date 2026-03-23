@@ -67,8 +67,32 @@ def generate_ai_explanation(item, interests):
                 f"Your cultural interests align perfectly with {name}, where {category} traditions come alive through food. Experience the social aspect of dining and learn about Istanbul's culinary customs that bring people together.",
                 f"For those interested in cultural experiences, {name} offers more than just food—it's a window into Istanbul's {category} traditions and social customs that have evolved over generations."
             ]
+        },
+        'tour': {
+            'exploration': [
+                f"{name} is an engaging tour that combines scenic routes and historical perspectives, making it a great choice for travelers who love exploration. The journey highlights key views and unique city landmarks to keep you immersed and energized.",
+                f"As a tour experience, {name} blends impressive landmarks and hands-on discovery. You’ll enjoy the sense of adventure, panoramic vistas, and meaningful narrative that connect you with Istanbul’s soul."
+            ],
+            'views': [
+                f"Since you’re interested in scenic viewpoints, {name} delivers unforgettable sights of the Bosphorus strait, bridging continents and urban history. It feels both exhilarating and calming, a perfect travel memory.",
+                f"{name} provides breathtaking views and a refreshing journey along the water, connecting your interest in exploration with a vivid, real-world experience of Istanbul’s skyline."
+            ]
+        },
+        'cultural': {
+            'culture': [
+                f"{name} is a cultural highlight that demonstrates Istanbul’s arts and traditions, from historical storytelling to live performance. The atmosphere is immersive and deeply emotional—ideal for travelers drawn to culture.",
+                f"This cultural spot combines rich heritage and local artistry, offering a vivid lens into Istanbul’s customs. It connects your interest in culture to a real experience in music, design, and community bonds."
+            ],
+            'history': [
+                f"With strong historical flavor and cultural depth, {name} lets you feel centuries of tradition. It is the kind of experience that builds context around your cultural interests and leaves a memorable impression.",
+                f"{name} bridges the historical and cultural sides of Istanbul, offering a meaningful journey through old rituals and modern adaptation. It’s engaging, reflective, and full of local color."
+            ]
         }
     }
+
+    # Deterministic random selection for repeatable fallback output
+    key_seed = hashlib.md5(f"{name}_{category}_{'_'.join(sorted(interests))}".encode()).hexdigest()
+    rng = random.Random(int(key_seed[:8], 16))
 
     # Find matching interests
     matching_interests = [interest for interest in interests if interest in templates.get(category, {})]
@@ -78,14 +102,30 @@ def generate_ai_explanation(item, interests):
         primary_interest = interests[0] if interests else 'exploration'
         explanation = f"Based on your interest in {primary_interest}, {name} offers a unique {category} experience in Istanbul that combines cultural significance with memorable attractions."
     else:
-        # Use a random template from matching interests
-        primary_interest = random.choice(matching_interests)
+        # Use a deterministic template from matching interests
+        primary_interest = rng.choice(matching_interests)
         category_templates = templates[category][primary_interest]
-        explanation = random.choice(category_templates)
+        explanation = rng.choice(category_templates)
 
     return explanation
 
+import openai
+import os
+import hashlib
+import random
+from database.db_connection import DatabaseConnection
+
+# Load API key from environment
+api_key = os.getenv("OPENAI_API_KEY")
+model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+
+def get_cache_key(item, interests):
+    """Generate a unique cache key for LLM responses"""
+    key_data = f"{item['name']}_{item['category']}_{'_'.join(sorted(interests))}"
+    return hashlib.md5(key_data.encode()).hexdigest()
+
 def generate_explanation(item, interests):
+    """Generate unique AI explanation using OpenAI API with category-specific prompts"""
     # Check cache first
     db = DatabaseConnection()
     cache_key = get_cache_key(item, interests)
@@ -95,29 +135,76 @@ def generate_explanation(item, interests):
         return cached_response
 
     if not api_key:
-        # Use sophisticated AI-like explanations without API
+        # Fallback if no API key: use local heuristic generator and cache result
         explanation = generate_ai_explanation(item, interests)
-    else:
-        client = openai.OpenAI(api_key=api_key)
+        db.cache_llm_response(cache_key, explanation, ttl=3600)
+        return explanation
 
-        prompt = f"Generate a contextual explanation for recommending {item['name']}, a {item['category']} in Istanbul, to a user interested in {', '.join(interests)}. Make it engaging and informative, highlighting why it matches their interests. Keep it to 2-3 sentences and make it sound natural and conversational."
+    client = openai.OpenAI(api_key=api_key)
 
-        try:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a knowledgeable and engaging travel assistant specializing in Istanbul recommendations. Provide personalized, insightful explanations that highlight unique aspects of each location."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=200,
-                temperature=0.7
-            )
-            explanation = response.choices[0].message.content.strip()
-        except Exception as e:
-            print(f"Error generating explanation: {e}")
-            explanation = generate_ai_explanation(item, interests)
+    # Create the detailed prompt based on the user's specification
+    prompt = f"""You are an expert Istanbul travel guide and AI recommendation assistant.
 
-    # Cache the response (TTL: 24 hours for better variety)
-    db.cache_llm_response(cache_key, explanation, ttl=86400)
+Your task is to generate a UNIQUE, context-aware explanation for why a place is recommended.
+
+INPUT:
+- Place Name: {item['name']}
+- Category: {item['category']}
+- Tags: {', '.join(item.get('tags', []))}
+- Description: {item.get('description', '')}
+- Rating: {item.get('rating', 'N/A')}
+- User Interests: {', '.join(interests)}
+
+CRITICAL INSTRUCTIONS:
+
+1. The explanation MUST adapt based on CATEGORY:
+
+- If FOOD:
+  Focus on cuisine, taste, local specialties, dining experience
+
+- If MOSQUE / RELIGIOUS:
+  Focus on architecture, spirituality, historical importance
+
+- If CULTURAL:
+  Focus on traditions, art, performances, heritage
+
+- If TOUR:
+  Focus on experience, views, exploration, journey
+
+- If NATURE:
+  Focus on scenery, relaxation, environment
+
+2. DO NOT use generic phrases like:
+   "this place matches your interests"
+
+3. ALWAYS:
+- Mention at least 2 specific features of the place
+- Connect those features to user interests
+- Make it feel personal and human
+- Keep it between 2–3 sentences
+- Make every explanation DIFFERENT
+
+4. Add slight emotional tone (exciting, peaceful, immersive)
+
+OUTPUT:
+Return ONLY the explanation text (no labels, no formatting)"""
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are an expert Istanbul travel guide and AI recommendation assistant. Generate unique, context-aware explanations that adapt to different place categories and user interests."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200,
+            temperature=0.9  # High temperature for variety as specified
+        )
+        explanation = response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"Error generating explanation: {e}")
+        explanation = generate_ai_explanation(item, interests)
+
+    # Cache the response (TTL: 1 hour as per requirements)
+    db.cache_llm_response(cache_key, explanation, ttl=3600)
 
     return explanation

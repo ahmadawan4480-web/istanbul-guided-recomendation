@@ -1,5 +1,7 @@
 import json
 import math
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine_similarity
 from database.db_connection import DatabaseConnection
 
 def load_places():
@@ -28,7 +30,7 @@ def create_vector(text_list, all_terms):
     return [1 if term in text_list else 0 for term in all_terms]
 
 def get_all_terms():
-    """Get all unique terms from places and events"""
+    """Get all unique terms from places and events - for backward compatibility"""
     places = load_places()
     events = load_events()
     all_items = places + events
@@ -39,41 +41,56 @@ def get_all_terms():
 
     return sorted(list(all_terms))
 
-def recommend_items(user_interests, user_id=None, limit=5, exclude_visited=True):
-    """
-    Recommend places and events using cosine similarity algorithm
-    Returns top N recommendations with scores
-    """
+def create_tfidf_vectors():
+    """Create TF-IDF vectors for all items"""
     places = load_places()
     events = load_events()
     all_items = places + events
 
-    # Get all unique terms for vectorization
-    all_terms = get_all_terms()
+    # Create documents from tags and descriptions
+    documents = []
+    for item in all_items:
+        tags_str = ' '.join(item.get('tags', []))
+        desc = item.get('description', '')
+        documents.append(f"{tags_str} {desc}")
 
-    # Create user interest vector
-    user_vector = create_vector(user_interests, all_terms)
+    # Create TF-IDF vectorizer
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=100)
+    tfidf_matrix = vectorizer.fit_transform(documents)
+
+    return vectorizer, tfidf_matrix, all_items
+
+def recommend_items(user_interests, limit=5, exclude_visited=False):
+    """
+    Recommend places and events using TF-IDF and cosine similarity
+    Returns top N recommendations with scores
+    """
+    # Create TF-IDF vectors
+    vectorizer, tfidf_matrix, all_items = create_tfidf_vectors()
+
+    # Create user interest document
+    user_doc = ' '.join(user_interests)
+    user_vector = vectorizer.transform([user_doc])
 
     db = DatabaseConnection()
     recommendations = []
 
-    for item in all_items:
-        item_tags = item.get('tags', [])
-        item_vector = create_vector(item_tags, all_terms)
+    for i, item in enumerate(all_items):
+        item_vector = tfidf_matrix[i]
 
         # Calculate cosine similarity
-        similarity = cosine_similarity(user_vector, item_vector)
+        similarity = sklearn_cosine_similarity(user_vector, item_vector).flatten()[0]
 
         # Get place rating (if available)
-        place_rating = db.get_place_average_rating(item['name']) or 0.0
+        place_rating = db.get_place_average_rating(item['name']) or item.get('rating', 0.0)
         normalized_rating = place_rating / 5.0  # Normalize to 0-1
 
         # Hybrid scoring: 70% similarity + 30% rating
         hybrid_score = (similarity * 0.7) + (normalized_rating * 0.3)
 
         # Exclude visited places if requested
-        if exclude_visited and user_id:
-            visited = db.get_visited_places(user_id)
+        if exclude_visited:
+            visited = db.get_visited_places()
             visited_names = [v['place_name'] for v in visited]
             if item['name'] in visited_names:
                 continue
@@ -89,6 +106,15 @@ def recommend_items(user_interests, user_id=None, limit=5, exclude_visited=True)
     # Sort by hybrid score (descending)
     recommendations.sort(key=lambda x: x['hybrid_score'], reverse=True)
 
+    # Add slight randomization for dynamic results
+    import random
+    random.seed()  # Use current time for randomness
+    # Shuffle top 10 results to avoid identical ordering
+    if len(recommendations) > 5:
+        top_recommendations = recommendations[:10]
+        random.shuffle(top_recommendations)
+        recommendations = top_recommendations + recommendations[10:]
+
     # Return top N
     top_recommendations = recommendations[:limit]
 
@@ -98,14 +124,15 @@ def recommend_items(user_interests, user_id=None, limit=5, exclude_visited=True)
         'category': rec['item']['category'],
         'tags': rec['item']['tags'],
         'rating': rec['item']['rating'],
+        'description': rec['item'].get('description', ''),
         'image_url': rec['item']['image_url'],
         'similarity_score': rec['similarity_score'],
         'hybrid_score': rec['hybrid_score']
     } for rec in top_recommendations]
 
-def recommend_places(user_interests, user_id=None, limit=5):
+def recommend_places(user_interests, limit=5):
     """Backward compatibility"""
-    return recommend_items(user_interests, user_id, limit)
+    return recommend_items(user_interests, limit)
 
 def generate_itinerary(interests, days=3):
     """

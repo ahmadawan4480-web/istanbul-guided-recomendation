@@ -6,6 +6,7 @@
   "tags": ["art", "culture", "exhibition", "photography"],
   "rating": 4.5,
   "date": "2024-09-15",
+  "description": "A prestigious contemporary art festival featuring international artists and innovative installations across the city.",
   "image_url": "https://via.placeholder.com/400x200?text=Istanbul+Biennial"
  },
  {
@@ -15,6 +16,7 @@
   "tags": ["nature", "sightseeing", "relaxation", "views"],
   "rating": 4.7,
   "date": "2024-10-01",
+  "description": "A relaxing boat tour along the Bosphorus Strait, showcasing Istanbul's waterfront beauty and historic sites.",
   "image_url": "https://via.placeholder.com/400x200?text=Bosphorus+Cruise"
  },
  {
@@ -24,6 +26,7 @@
   "tags": ["music", "dance", "culture", "food"],
   "rating": 4.6,
   "date": "2024-08-20",
+  "description": "An evening of traditional Turkish music, dance performances, and cuisine celebrating Ottoman culture.",
   "image_url": "https://via.placeholder.com/400x200?text=Turkish+Night+Show"
  },
  {
@@ -33,6 +36,7 @@
   "tags": ["culture", "spirituality", "music", "dance", "history"],
   "rating": 4.8,
   "date": "2024-11-10",
+  "description": "A mesmerizing Sufi ritual featuring whirling dervishes, traditional music, and spiritual chanting.",
   "image_url": "https://via.placeholder.com/400x200?text=Whirling+Dervishes"
  },
  {
@@ -42,6 +46,7 @@
   "tags": ["music", "culture", "entertainment", "nightlife"],
   "rating": 4.4,
   "date": "2024-07-15",
+  "description": "An international jazz festival bringing together renowned musicians for performances across historic venues.",
   "image_url": "https://via.placeholder.com/400x200?text=Jazz+Festival"
  },
  {
@@ -51,6 +56,7 @@
   "tags": ["culture", "food", "spirituality", "tradition"],
   "rating": 4.7,
   "date": "2024-03-15",
+  "description": "Special evening events during Ramadan featuring traditional foods, lanterns, and cultural celebrations.",
   "image_url": "https://via.placeholder.com/400x200?text=Ramadan+Nights"
  },
  {
@@ -60,6 +66,7 @@
   "tags": ["dance", "culture", "entertainment", "experience"],
   "rating": 4.3,
   "date": "2024-12-05",
+  "description": "Interactive workshops teaching traditional belly dance moves and Ottoman dance forms.",
   "image_url": "https://via.placeholder.com/400x200?text=Belly+Dance"
  }
 ]

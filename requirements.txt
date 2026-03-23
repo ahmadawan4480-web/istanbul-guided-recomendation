@@ -2,3 +2,6 @@ openai
 fastapi
 uvicorn
 flask
+scikit-learn
+python-dotenv
+pytest

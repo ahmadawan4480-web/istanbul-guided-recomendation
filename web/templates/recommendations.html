@@ -13,16 +13,12 @@
             <div class="card-body">
                 <form id="recommendationForm">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label for="userId" class="form-label">User ID</label>
-                            <input type="text" class="form-control" id="userId" placeholder="Enter your user ID" required>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <label for="interests" class="form-label">Interests</label>
                             <input type="text" class="form-control" id="interests"
                                    placeholder="history, culture, food" required>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                             <label class="form-label">&nbsp;</label>
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-search me-1"></i>Get Recommendations
@@ -50,7 +46,6 @@
 document.getElementById('recommendationForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const userId = document.getElementById('userId').value;
     const interests = document.getElementById('interests').value.split(',').map(i => i.trim());
 
     try {
@@ -59,7 +54,7 @@ document.getElementById('recommendationForm').addEventListener('submit', async f
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ user_id: userId, interests: interests })
+            body: JSON.stringify({ interests: interests })
         });
 
         const data = await response.json();
@@ -119,15 +114,13 @@ function displayRecommendations(recommendations) {
 }
 
 async function ratePlace(placeName, rating) {
-    const userId = document.getElementById('userId').value;
-
     try {
         const response = await fetch('/api/rate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ user_id: userId, place_name: placeName, rating: rating })
+            body: JSON.stringify({ place_name: placeName, rating: rating })
         });
 
         const data = await response.json();

@@ -5,16 +5,17 @@
 This is a comprehensive AI-powered recommendation system for Istanbul tourism that includes:
 
 ### 🎯 Core AI Features
+- **TF-IDF Vectorization** on place tags and descriptions
 - **Cosine Similarity Algorithm** for intelligent matching
 - **Hybrid Scoring** (70% similarity + 30% user ratings)
-- **LLM-Generated Explanations** using OpenAI GPT
-- **Personalized Recommendations** based on user interests
+- **LLM-Generated Explanations** using OpenAI GPT (with caching)
+- **Dynamic Recommendations** with randomization for variety
 
 ### 👤 User Management
-- **User Profiles** with persistent storage
+- **Session-Based Storage** (Flask sessions for web, in-memory for console)
 - **Interest Management** (add/update preferences)
-- **Rating System** (1-5 stars for places)
-- **Visit Tracking** and history
+- **Global Rating System** (1-5 stars for places)
+- **Visit Tracking** (global visited places)
 
 ### 📅 Advanced Features
 - **Custom Itineraries** (1-7 day plans)
@@ -106,10 +107,9 @@ POST /api/recommendations
 Content-Type: application/json
 
 {
-  "user_id": "user123",
   "interests": ["history", "culture"],
   "limit": 5,
-  "exclude_visited": true
+  "exclude_visited": false
 }
 ```
 
@@ -124,9 +124,9 @@ Content-Type: application/json
 }
 ```
 
-### User Profile
+### Profile & Ratings
 ```http
-GET /api/profile/{user_id}
+GET /api/profile
 POST /api/interests
 POST /api/ratings
 ```
@@ -198,10 +198,10 @@ istanbul-guided-recomendation/
 - **Mobile-Friendly**: Responsive design for all devices
 
 ### Data Management
-- **17 Places** and **7 Events** in the database
-- **Tag-Based Categorization** with 15+ unique tags
-- **Persistent Storage** with SQLite database
-- **Caching Layer** for performance optimization
+- **17 Places** and **7 Events** in JSON datasets
+- **TF-IDF Processing** of tags and descriptions
+- **SQLite Database** for ratings, visited places, and LLM cache
+- **No User IDs** - global storage approach
 
 ### Production Ready
 - **Error Handling**: Graceful degradation without API keys
